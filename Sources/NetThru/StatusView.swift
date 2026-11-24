@@ -17,7 +17,7 @@ final class StatusView: NSView {
     private static let lineGap: CGFloat = 3
     private static let font = NSFont.monospacedDigitSystemFont(ofSize: 9, weight: .medium)
     /// The graph never scales below this rate, so background chatter stays a sliver.
-    private static let minimumScale: Double = 10_000
+    static let minimumScale: Double = 10_000
 
     private static let textWidth = ByteFormat.widestRates
         .map { ($0 as NSString).size(withAttributes: [.font: font]).width }

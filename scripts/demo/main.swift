@@ -9,7 +9,8 @@ typealias Sample = TrafficMonitor.Sample
 
 let outputDirectory = URL(fileURLWithPath: CommandLine.arguments[1])
 let scale: CGFloat = 4
-let frameDelay = 0.5 // seconds; the app itself updates once a second, so this is 2× speed
+let frameDelay = 0.4 // seconds; the app itself updates once a second, so this is 2.5× speed
+let holdDelay = 1.6 // how long a figure stays put once it's fully in view
 
 // MARK: - Traffic script
 
@@ -37,7 +38,48 @@ let upload = zip(
     [60, 180, 210, 190, 220, 200, 205, 90, 20].map { $0 * KB },
     [1.8, 5.2, 6.1, 5.8, 6.3, 6.0, 5.9, 2.4, 0.3].map { $0 * MB }
 ).map { Sample(down: $0, up: $1) }
-let script = idle(4) + download + settle + upload + idle(5)
+// Easter eggs: figures drawn by the graph's outline, upload bars above the midline and download
+// bars below. Heights are fractions of the graph's minimum scale, so a figure keeps its proportions
+// as long as nothing bigger is in view; the quiet samples around it make sure of that.
+func symmetric(_ half: [Double]) -> [Double] {
+    half + half.dropLast().reversed()
+}
+
+func figure(up: [Double], down: [Double]) -> [Sample] {
+    zip(symmetric(up), symmetric(down)).map {
+        Sample(down: $1 * StatusView.minimumScale, up: $0 * StatusView.minimumScale)
+    }
+}
+
+let heart = figure(up: [0.4, 0.7, 0.82, 0.7, 0.45, 0.22], down: [0.35, 0.5, 0.62, 0.74, 0.87, 1])
+let star = figure(up: [0.1, 0.2, 0.28, 0.36, 0.62, 1], down: [0, 0.2, 0.95, 0.7, 0.4, 0.2])
+let cat = figure(up: [0.35, 0.75, 1, 0.5, 0.42, 0.44], down: [0.25, 0.45, 0.58, 0.66, 0.7, 0.72])
+let tree = figure(up: [0.05, 0.14, 0.4, 0.64, 0.82, 1], down: [0, 0, 0, 0, 0.3, 0.3])
+
+func quiet(_ count: Int) -> [Sample] {
+    Array(repeating: Sample(down: 0, up: 0), count: count)
+}
+
+var script: [Sample] = []
+/// Frames where a figure is fully in view, framed by quiet samples.
+var holdFrames: Set<Int> = []
+
+func addFigure(_ samples: [Sample]) {
+    script += quiet(1)
+    // The frame showing samples (start - 1)...(start + 12): one quiet sample, the figure, two quiet.
+    holdFrames.insert(script.count + StatusView.sampleCount - 2)
+    script += samples + quiet(2)
+}
+
+script += idle(3)
+addFigure(heart)
+script += idle(1) + download + settle
+addFigure(star)
+script += upload + idle(2)
+addFigure(cat)
+script += quiet(1)
+addFigure(tree)
+script += idle(2)
 
 // MARK: - Drawing
 
@@ -146,17 +188,18 @@ MainActor.assumeIsolated {
         CGImageDestinationSetProperties(destination, [
             kCGImagePropertyGIFDictionary: [kCGImagePropertyGIFLoopCount: 0],
         ] as CFDictionary)
-        let frameProperties = [
-            kCGImagePropertyGIFDictionary: [
-                kCGImagePropertyGIFDelayTime: frameDelay,
-                kCGImagePropertyGIFUnclampedDelayTime: frameDelay,
-            ],
-        ] as CFDictionary
         for index in script.indices {
             // The graph wraps around the end of the script, so the loop is seamless.
             let history = (0..<StatusView.sampleCount).map { offset in
                 script[(index - StatusView.sampleCount + 1 + offset + script.count) % script.count]
             }
+            let delay = holdFrames.contains(index) ? holdDelay : frameDelay
+            let frameProperties = [
+                kCGImagePropertyGIFDictionary: [
+                    kCGImagePropertyGIFDelayTime: delay,
+                    kCGImagePropertyGIFUnclampedDelayTime: delay,
+                ],
+            ] as CFDictionary
             CGImageDestinationAddImage(destination, renderFrame(history: history, theme: theme), frameProperties)
         }
         guard CGImageDestinationFinalize(destination) else { fatalError("Couldn't write \(url.path)") }
