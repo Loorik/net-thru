@@ -14,22 +14,35 @@ Units adapt (KB/s, MB/s, GB/s).
 Clicking it shows how much you've transferred since launch, which interfaces are being
 measured, a **Launch at Login** toggle and **Quit**.
 
-## Build & install
+## Install
 
-Needs macOS 14+ and the Xcode Command Line Tools (`xcode-select --install`). Xcode itself
-isn't required.
+Needs macOS 14 or later, on an Apple Silicon or Intel Mac.
+
+```sh
+brew install --cask loorik/tap/net-thru
+```
+
+net-thru isn't notarized by Apple, which needs a paid developer account. So macOS blocks it the
+first time you open it. Go to **System Settings → Privacy & Security**, scroll down and click
+**Open Anyway**. You only need to do this once.
+
+## Usage
+
+To start it automatically, click the menu bar item and enable **Launch at Login**. Turn that
+off again before uninstalling.
+
+net-thru places itself next to the system icons (Wi-Fi, battery, ...), so it stays visible
+when the menu bar gets crowded. ⌘-drag it to move it; macOS remembers where you put it.
+
+## Build from source
+
+Needs the Xcode Command Line Tools (`xcode-select --install`). Xcode itself isn't required.
 
 ```sh
 make install     # builds build/net-thru.app, copies it to /Applications and starts it
 make run         # builds and runs from build/ without installing
 make uninstall   # quits it and removes it from /Applications
 ```
-
-To start it automatically, click the menu bar item and enable **Launch at Login**. Turn that
-off again before running `make uninstall`.
-
-net-thru places itself next to the system icons (Wi-Fi, battery, ...), so it stays visible
-when the menu bar gets crowded. ⌘-drag it to move it; macOS remembers where you put it.
 
 ## What gets counted
 
@@ -57,3 +70,11 @@ macOS only gives ordinary apps coarse interface counters, rounded to 1 KB and wr
 | `Sources/NetThru/ByteFormat.swift` | "12 KB/s" / "1.2 MB/s" formatting |
 | `scripts/make-icon.swift` | Regenerates `Resources/AppIcon.icns` (`make icon`) |
 | `scripts/demo/main.swift` | Renders the animation above from the app's own drawing code (`make demo`) |
+
+## Releasing
+
+1. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Resources/Info.plist`.
+2. `make release` builds `build/net-thru-<version>.zip` and prints its SHA-256.
+3. `gh release create v<version> build/net-thru-<version>.zip`
+4. Update `version` and `sha256` in `Casks/net-thru.rb` in
+   [Loorik/homebrew-tap](https://github.com/Loorik/homebrew-tap).

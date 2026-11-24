@@ -1,5 +1,9 @@
 APP_NAME    := net-thru
 APP         := build/$(APP_NAME).app
+VERSION     := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
+ZIP         := build/$(APP_NAME)-$(VERSION).zip
+# Universal binary, so the same download works on Apple Silicon and Intel Macs.
+SWIFT_BUILD := swift build -c release --arch arm64 --arch x86_64
 INSTALL_DIR := /Applications
 # Quits a running copy and waits until it's gone, so `open` doesn't race the old process.
 QUIT        := pkill -x $(APP_NAME); while pgrep -x $(APP_NAME) >/dev/null; do sleep 0.1; done
@@ -7,14 +11,14 @@ QUIT        := pkill -x $(APP_NAME); while pgrep -x $(APP_NAME) >/dev/null; do s
 # The demo renderer reuses the app's drawing code, minus its entry point and app delegate.
 DEMO_SOURCES := $(filter-out %/main.swift %/AppDelegate.swift,$(wildcard Sources/NetThru/*.swift))
 
-.PHONY: app run install uninstall icon demo clean
+.PHONY: app run install uninstall release icon demo clean
 
 # Builds the release binary and wraps it in an ad-hoc signed .app bundle.
 app:
-	swift build -c release
+	$(SWIFT_BUILD)
 	rm -rf $(APP)
 	mkdir -p $(APP)/Contents/MacOS $(APP)/Contents/Resources
-	cp "$$(swift build -c release --show-bin-path)/$(APP_NAME)" $(APP)/Contents/MacOS/
+	cp "$$($(SWIFT_BUILD) --show-bin-path)/$(APP_NAME)" $(APP)/Contents/MacOS/
 	cp Resources/Info.plist $(APP)/Contents/
 	cp Resources/AppIcon.icns $(APP)/Contents/Resources/
 	codesign --force --sign - $(APP)
@@ -33,6 +37,12 @@ install: app
 uninstall:
 	@$(QUIT)
 	rm -rf $(INSTALL_DIR)/$(APP_NAME).app
+
+# Zips the app for a GitHub release; prints the checksum the Homebrew cask needs.
+release: app
+	rm -f $(ZIP)
+	ditto -c -k --keepParent $(APP) $(ZIP)
+	shasum -a 256 $(ZIP)
 
 icon:
 	swift scripts/make-icon.swift Resources/AppIcon.icns
