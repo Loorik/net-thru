@@ -8,8 +8,9 @@ INSTALL_DIR := /Applications
 # Quits a running copy and waits until it's gone, so `open` doesn't race the old process.
 QUIT        := pkill -x $(APP_NAME); while pgrep -x $(APP_NAME) >/dev/null; do sleep 0.1; done
 
-# The demo renderer reuses the app's drawing code, minus its entry point and app delegate.
-DEMO_SOURCES := $(filter-out %/main.swift %/AppDelegate.swift,$(wildcard Sources/NetThru/*.swift))
+# The demo renderer reuses the app's drawing, monitoring and formatting code.
+DEMO_SOURCES := $(wildcard Sources/NetThru/Drawing/*.swift Sources/NetThru/Monitoring/*.swift \
+                           Sources/NetThru/Formatting/*.swift scripts/demo/*.swift)
 
 .PHONY: app run install uninstall release icon demo clean
 
@@ -50,7 +51,7 @@ icon:
 # Re-renders the README animation (docs/demo-light.gif, docs/demo-dark.gif).
 demo:
 	mkdir -p .build
-	swiftc -O $(DEMO_SOURCES) scripts/demo/main.swift -o .build/make-demo
+	swiftc -O $(DEMO_SOURCES) -o .build/make-demo
 	.build/make-demo docs -AppleLocale en_US
 
 clean:
