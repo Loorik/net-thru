@@ -2,7 +2,7 @@ import Foundation
 
 /// Compact, decimal (1 KB = 1000 bytes, like Activity Monitor) byte amounts: "0.4 KB", "12 KB",
 /// "340 KB", "1.2 MB", "45 MB". Never more than three digits, so the menu bar width stays put.
-enum ByteFormat {
+package enum ByteFormat {
     private static let units = ["KB", "MB", "GB", "TB"]
     private static let unitFactor = 1000.0
     /// Values that would round to 1000 move up to the next unit: "1.0 MB", not "1000 KB".
@@ -17,15 +17,15 @@ enum ByteFormat {
     private static let widestNumber = "888"
 
     /// Strings at least as wide as anything `rate` produces, for sizing the menu bar item.
-    static let widestRates = units.map { "\(widestNumber) \($0)/s" }
+    package static let widestRates = units.map { "\(widestNumber) \($0)/s" }
 
-    static func rate(_ bytesPerSecond: Double) -> String {
-        amount(bytesPerSecond) + "/s"
+    package static func rate(_ bytesPerSecond: Double, locale: Locale = .current) -> String {
+        amount(bytesPerSecond, locale: locale) + "/s"
     }
 
-    static func amount(_ bytes: Double) -> String {
+    package static func amount(_ bytes: Double, locale: Locale = .current) -> String {
         let (value, unit) = inLargestFittingUnit(bytes)
-        return "\(formattedNumber(value)) \(unit)"
+        return "\(formattedNumber(value, locale: locale)) \(unit)"
     }
 
     private static func inLargestFittingUnit(_ bytes: Double) -> (value: Double, unit: String) {
@@ -38,9 +38,9 @@ enum ByteFormat {
         return (value, units[unitIndex])
     }
 
-    private static func formattedNumber(_ value: Double) -> String {
+    private static func formattedNumber(_ value: Double, locale: Locale) -> String {
         if value < zeroThreshold { return "0" }
         let format = value < decimalThreshold ? oneDecimal : noDecimals
-        return String(format: format, locale: .current, value)
+        return String(format: format, locale: locale, value)
     }
 }

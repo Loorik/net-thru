@@ -4,8 +4,8 @@ import Darwin
 ///
 /// Uses `sysctl(NET_RT_IFLIST2)`, whose counters are 64-bit (`getifaddrs` only has 32-bit
 /// ones). Recent macOS still truncates them for ordinary apps; see `CounterDelta`.
-enum InterfaceCountersReader {
-    static func read() -> [String: InterfaceCounters] {
+package enum InterfaceCountersReader {
+    package static func read() -> [String: InterfaceCounters] {
         guard let messages = InterfaceListSysctl.fetchMessages() else { return [:] }
         return messages.withUnsafeBytes { InterfaceMessageParser(bytes: $0).countersByInterface() }
     }
@@ -46,7 +46,7 @@ private enum InterfaceListSysctl {
 }
 
 /// Walks the routing messages and picks out each interface's name and counters.
-private struct InterfaceMessageParser {
+struct InterfaceMessageParser {
     private static let headerSize = MemoryLayout<if_msghdr>.size
     private static let infoSize = MemoryLayout<if_msghdr2>.size
     /// Fields of the link-level address (`sockaddr_dl`) that follows each interface message.

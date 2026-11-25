@@ -1,3 +1,5 @@
+import NetThruKit
+
 /// The scripted traffic and figures of the README animation.
 enum ReadmeTraffic {
     static let script = TrafficScript([

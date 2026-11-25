@@ -1,4 +1,5 @@
 import AppKit
+import NetThruKit
 
 /// Layout of the mock menu bar around net-thru's status item, in points: the status item, then
 /// Wi-Fi and battery symbols, then a clock.
@@ -16,7 +17,7 @@ enum MockMenuBar {
 
     static let clockText = "Tue 9:41" as NSString
     static let clockFont = NSFont.systemFont(ofSize: clockFontSize, weight: .medium)
-    static let symbols = symbolNames.map(symbol(named:))
+    static let symbols = symbolNames.map { symbol(named: $0) }
     static let statusItemSize = NSSize(width: StatusLayout.width, height: height)
     static let barRect = NSRect(x: margin, y: margin, width: barWidth(), height: height)
     static let canvasSize = NSSize(width: barRect.width + 2 * margin, height: height + 2 * margin)

@@ -3,8 +3,12 @@ import SystemConfiguration
 /// Describes interfaces for the menu, e.g. "Wi-Fi (en0), Thunderbolt Ethernet (en5)".
 enum InterfaceDescriptions {
     static func describe(_ bsdNames: [String]) -> String {
+        describe(bsdNames, displayNames: displayNamesByBSDName())
+    }
+
+    /// `displayNames` maps BSD names to names like "Wi-Fi".
+    static func describe(_ bsdNames: [String], displayNames: [String: String]) -> String {
         guard !bsdNames.isEmpty else { return "No connection" }
-        let displayNames = displayNamesByBSDName()
         return bsdNames.map { describe($0, displayName: displayNames[$0]) }.joined(separator: ", ")
     }
 

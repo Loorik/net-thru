@@ -2,7 +2,11 @@ import Foundation
 
 /// Turns the kernel's cumulative interface counters into transfer rates.
 @MainActor
-final class TrafficMonitor {
+package final class TrafficMonitor {
+    /// Current byte counters of every interface, keyed by BSD name.
+    package typealias CounterSource = @MainActor () -> [String: InterfaceCounters]
+    package typealias TimeSource = @MainActor () -> ContinuousClock.Instant
+
     private struct Reading {
         let time: ContinuousClock.Instant
         let counters: [String: InterfaceCounters]
@@ -14,26 +18,33 @@ final class TrafficMonitor {
     private static let countedInterfacePrefix = "en"
 
     /// Most recent samples, oldest first.
-    private(set) var recentSamples: [TrafficSample] = []
-    private(set) var totalDownloaded: UInt64 = 0
-    private(set) var totalUploaded: UInt64 = 0
+    package private(set) var recentSamples: [TrafficSample] = []
+    package private(set) var totalDownloaded: UInt64 = 0
+    package private(set) var totalUploaded: UInt64 = 0
     /// Counted interfaces that are up and have carried traffic (idle Thunderbolt ports also
     /// report being up).
-    private(set) var activeInterfaceNames: [String] = []
+    package private(set) var activeInterfaceNames: [String] = []
 
     private let historyLength: Int
-    private let clock = ContinuousClock()
+    private let readInterfaceCounters: CounterSource
+    private let now: TimeSource
     private var lastReading: Reading?
 
-    init(historyLength: Int) {
+    package init(
+        historyLength: Int,
+        counters: @escaping CounterSource = InterfaceCountersReader.read,
+        clock: @escaping TimeSource = { ContinuousClock.now }
+    ) {
         self.historyLength = historyLength
+        readInterfaceCounters = counters
+        now = clock
     }
 
-    var latestSample: TrafficSample {
+    package var latestSample: TrafficSample {
         recentSamples.last ?? .idle
     }
 
-    func takeSample() {
+    package func takeSample() {
         let reading = readCounters()
         activeInterfaceNames = Self.activeInterfaceNames(in: reading)
         if let lastReading { record(from: lastReading, to: reading) }
@@ -42,13 +53,13 @@ final class TrafficMonitor {
 
     /// Forgets the last reading, e.g. after the Mac wakes from sleep, so traffic that happened
     /// while the display wasn't updating doesn't show up as one huge spike.
-    func forgetLastReading() {
+    package func forgetLastReading() {
         lastReading = nil
     }
 
     private func readCounters() -> Reading {
-        let time = clock.now
-        let counters = InterfaceCountersReader.read().filter { Self.isCounted($0.key) }
+        let time = now()
+        let counters = readInterfaceCounters().filter { Self.isCounted($0.key) }
         return Reading(time: time, counters: counters)
     }
 

@@ -1,7 +1,9 @@
 import AppKit
+import NetThruKit
 
 /// Colours of the mock menu bar, matching GitHub's light and dark page backgrounds so the
 /// rounded corners blend in.
+@MainActor
 struct Theme {
     static let light = Theme(
         appearance: .aqua, page: .white, bar: NSColor(white: 0.955, alpha: 1),

@@ -1,3 +1,5 @@
+import NetThruKit
+
 /// The traffic the README animation plays: idle chatter, a big download, an upload and, in
 /// between, a few figures drawn by the graph's outline.
 struct TrafficScript {

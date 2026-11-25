@@ -1,10 +1,16 @@
 import Darwin
 
 /// Cumulative byte counters of one network interface, as reported by the kernel.
-struct InterfaceCounters {
-    var bytesReceived: UInt64
-    var bytesSent: UInt64
-    var isUp: Bool
+package struct InterfaceCounters: Sendable {
+    package var bytesReceived: UInt64
+    package var bytesSent: UInt64
+    package var isUp: Bool
+
+    package init(bytesReceived: UInt64, bytesSent: UInt64, isUp: Bool) {
+        self.bytesReceived = bytesReceived
+        self.bytesSent = bytesSent
+        self.isUp = isUp
+    }
 
     var hasCarriedTraffic: Bool {
         bytesReceived > 0 || bytesSent > 0

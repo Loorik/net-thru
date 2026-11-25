@@ -2,8 +2,8 @@ import AppKit
 
 /// Sizes and spacing of the menu bar item, in points.
 @MainActor
-enum StatusLayout {
-    static let visibleSampleCount = 14
+package enum StatusLayout {
+    package static let visibleSampleCount = 14
     /// Horizontal space per sample: the bar plus a one-pixel gap.
     static let slotWidth: CGFloat = 2
     static let graphWidth = CGFloat(visibleSampleCount) * slotWidth
@@ -20,7 +20,7 @@ enum StatusLayout {
 
     static let arrowX = horizontalPadding + graphWidth + graphToArrowSpacing
     static let textWidth = widestRateWidth()
-    static let width = arrowX + arrowSize.width + arrowToTextSpacing + textWidth + horizontalPadding
+    package static let width = arrowX + arrowSize.width + arrowToTextSpacing + textWidth + horizontalPadding
 
     /// How far the graph and the text reach above and below the midline.
     static var halfHeight: CGFloat {

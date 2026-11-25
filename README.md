@@ -42,6 +42,7 @@ Needs the Xcode Command Line Tools (`xcode-select --install`). Xcode itself isn'
 make install     # builds build/net-thru.app, copies it to /Applications and starts it
 make run         # builds and runs from build/ without installing
 make uninstall   # quits it and removes it from /Applications
+make test        # runs the test suite
 ```
 
 ## What gets counted
@@ -63,13 +64,13 @@ macOS only gives ordinary apps coarse interface counters, rounded to 1 KB and wr
 
 | Folder | Purpose |
 | --- | --- |
-| `Sources/NetThru/Monitoring` | Reads the kernel's per-interface byte counters (`sysctl NET_RT_IFLIST2`) and turns them into rates, history and totals |
-| `Sources/NetThru/Drawing` | Draws the graph and the numbers in the menu bar |
-| `Sources/NetThru/MenuBar` | The status item, its position and its menu |
-| `Sources/NetThru/App` | App delegate, the 1-second ticker, launch at login |
-| `Sources/NetThru/Formatting` | "12 KB/s" / "1.2 MB/s" formatting |
+| `Sources/NetThruKit/Monitoring` | Reads the kernel's per-interface byte counters (`sysctl NET_RT_IFLIST2`) and turns them into rates, history and totals |
+| `Sources/NetThruKit/Drawing` | Draws the graph and the numbers in the menu bar |
+| `Sources/NetThruKit/Formatting` | "12 KB/s" / "1.2 MB/s" formatting |
+| `Sources/NetThru` | The app: menu bar item, its menu, the 1-second ticker, launch at login |
+| `Sources/MakeDemo` | Renders the animation above from the app's own drawing code (`make demo`) |
+| `Tests` | Swift Testing suites for each of the above (`make test`) |
 | `scripts/make-icon.swift` | Regenerates `Resources/AppIcon.icns` (`make icon`) |
-| `scripts/demo` | Renders the animation above from the app's own drawing code (`make demo`) |
 
 ## Releasing
 

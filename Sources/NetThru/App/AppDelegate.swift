@@ -1,4 +1,5 @@
 import AppKit
+import NetThruKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {

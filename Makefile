@@ -3,16 +3,12 @@ APP         := build/$(APP_NAME).app
 VERSION     := $(shell /usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" Resources/Info.plist)
 ZIP         := build/$(APP_NAME)-$(VERSION).zip
 # Universal binary, so the same download works on Apple Silicon and Intel Macs.
-SWIFT_BUILD := swift build -c release --arch arm64 --arch x86_64
+SWIFT_BUILD := swift build -c release --arch arm64 --arch x86_64 --product $(APP_NAME)
 INSTALL_DIR := /Applications
 # Quits a running copy and waits until it's gone, so `open` doesn't race the old process.
 QUIT        := pkill -x $(APP_NAME); while pgrep -x $(APP_NAME) >/dev/null; do sleep 0.1; done
 
-# The demo renderer reuses the app's drawing, monitoring and formatting code.
-DEMO_SOURCES := $(wildcard Sources/NetThru/Drawing/*.swift Sources/NetThru/Monitoring/*.swift \
-                           Sources/NetThru/Formatting/*.swift scripts/demo/*.swift)
-
-.PHONY: app run install uninstall release icon demo clean
+.PHONY: app run install uninstall release test icon demo clean
 
 # Builds the release binary and wraps it in an ad-hoc signed .app bundle.
 app:
@@ -48,11 +44,16 @@ release: app
 icon:
 	swift scripts/make-icon.swift Resources/AppIcon.icns
 
+# Swift Build sometimes leaves out the path to Swift Testing's macro plugin, which fails the build
+# with "plugin for module 'TestingMacros' not found". Passing the path explicitly avoids that.
+TESTING_PLUGINS := $(shell dirname "$$(xcrun --find swift)")/../lib/swift/host/plugins/testing
+
+test:
+	swift test -Xswiftc -plugin-path -Xswiftc "$(TESTING_PLUGINS)"
+
 # Re-renders the README animation (docs/demo-light.gif, docs/demo-dark.gif).
 demo:
-	mkdir -p .build
-	swiftc -O $(DEMO_SOURCES) -o .build/make-demo
-	.build/make-demo docs -AppleLocale en_US
+	swift run -c release MakeDemo docs -AppleLocale en_US
 
 clean:
 	rm -rf .build build

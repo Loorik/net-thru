@@ -1,4 +1,5 @@
 import AppKit
+import NetThruKit
 
 /// The menu bar item: the graph view on top of a status bar button, plus its menu.
 @MainActor

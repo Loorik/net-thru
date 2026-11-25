@@ -1,4 +1,5 @@
 import AppKit
+import NetThruKit
 
 /// The menu that opens when clicking the menu bar item.
 @MainActor
